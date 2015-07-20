@@ -35,7 +35,10 @@ defmodule Phoenix.PubSub.PG2Server do
         {:stop, :no_such_group, {:error, :no_such_group}, state}
 
       pids when is_list(pids) ->
-        Enum.each(pids, &send(&1, {:forward_to_local, from_pid, topic, msg}))
+        Enum.each(pids, fn
+          pid when pid == self() -> Local.broadcast(state.local_name, from_pid, topic, msg)
+          pid -> send(pid, {:forward_to_local, from_pid, topic, msg})
+        end)
         {:reply, :ok, state}
     end
   end

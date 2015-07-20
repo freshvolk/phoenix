@@ -70,7 +70,7 @@ defmodule Phoenix.PubSub.Local do
 
   """
   def broadcast(local_server, from, topic, msg) do
-    GenServer.call(local_server, {:broadcast, from, topic, msg})
+    GenServer.cast(local_server, {:broadcast, from, topic, msg})
   end
 
   @doc """
@@ -128,17 +128,18 @@ defmodule Phoenix.PubSub.Local do
     {:reply, :ok, drop_subscription(state, pid, topic)}
   end
 
-  def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
+  def handle_cast({:broadcast, from_pid, topic, msg}, state) do
     case HashDict.fetch(state.topics, topic) do
       {:ok, pids} ->
         Enum.each(pids, fn
           pid when pid != from_pid -> send(pid, msg)
           _ -> :ok
         end)
-        {:reply, :ok, state}
+        {:noreply, state}
 
       :error ->
-        {:reply, {:error, :no_topic}, state}
+        {:noreply, state}
+        # {:reply, {:error, :no_topic}, state}
     end
   end
 
