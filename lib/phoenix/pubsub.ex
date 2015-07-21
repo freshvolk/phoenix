@@ -128,8 +128,10 @@ defmodule Phoenix.PubSub do
   Broadcasts message on given topic.
   """
   @spec broadcast(atom, binary, term) :: :ok | {:error, term}
-  def broadcast(server, topic, message),
-    do: call(server, {:broadcast, :none, topic, message})
+  def broadcast(server, topic, message) do
+    {:perform, {mod, func, args}} = GenServer.call(server, {:broadcast, :none, topic})
+    apply(mod, func, [message | args])
+  end
 
   @doc """
   Broadcasts message on given topic.
@@ -148,8 +150,10 @@ defmodule Phoenix.PubSub do
   Broadcasts message to all but `from_pid` on given topic.
   """
   @spec broadcast_from(atom, pid, binary, term) :: :ok | {:error, term}
-  def broadcast_from(server, from_pid, topic, message) when is_pid(from_pid),
-    do: call(server, {:broadcast, from_pid, topic, message})
+  def broadcast_from(server, from_pid, topic, message) when is_pid(from_pid) do
+    {:perform, {mod, func, args}} = GenServer.call(server, {:broadcast, from_pid, topic})
+    apply(mod, func, [message | args])
+  end
 
   @doc """
   Broadcasts message to all but `from_pid` on given topic.
@@ -165,7 +169,7 @@ defmodule Phoenix.PubSub do
   end
 
   defp call(server, msg) do
-    GenServer.call(server, msg) |> perform
+    GenServer.call(server, msg) |> perform()
   end
 
   defp perform({:perform, {mod, func, args}}) do
