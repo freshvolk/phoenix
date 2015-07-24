@@ -237,6 +237,19 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Sends response of MIME type mime_type
+
+  ## Examples
+
+      iex> mime conn, "application/javascript", "var wtf = 'mate'..."
+
+  """
+  @spec mime(Plug.Conn.t, String, iodata) :: Plug.Conn.t
+  def mime(conn, mime_type, data) do
+    send_resp(conn, conn.status || 200, mime_type, data)
+  end
+
+  @doc """
   Sends redirect response to the given url.
 
   For security, `:to` only accepts paths. Use the `:external`
